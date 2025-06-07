@@ -4,7 +4,7 @@ import { scheduleReminder } from './reminder.js';
 
 dotenv.config();
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const bot = new TelegramBot('7355709918:AAFaBJdizVhxRVuUmhVwoBfSHsrvcT5mCfE', { polling: true });
 
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, 'Привет! Напиши напоминание в формате: "Напомни через 10 минут купить хлеб".');
