@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 import { scheduleReminder } from './reminder.js';
-import { pluralizeAccusative } from './reminder.js';
+import { parseReminderText } from './parser.js';
 
 dotenv.config();
 
@@ -15,26 +15,14 @@ bot.on('message', (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-  const timeMatch = text.match(/через (\d+) (минут[а]?|час[аов]?)/i);
+  const parsed = parseReminderText(text);
+  if (!parsed) return;
 
-  if (timeMatch) {
-    const [, timeStr, unit] = timeMatch;
-    const time = parseInt(timeStr, 10);
-    const minutes = unit.startsWith('час') ? time * 60 : time;
+  const { time, unitWord, delaySeconds, task } = parsed;
 
-    const taskMatch = text.match(/напомни через \d+ (?:минут[а]?|час[аов]?)\s*(.+)/i);
-    let task = taskMatch ? taskMatch[1].trim() : 'что-то важное';
-    task = task.replace(/^у\s+/i, '');
+  scheduleReminder(delaySeconds, () => {
+    bot.sendMessage(chatId, `Напоминаю: ${task}`);
+  });
 
-    const unitWord = unit.startsWith('час')
-      ? pluralizeAccusative(time, ['час', 'часа', 'часов'])
-      : pluralizeAccusative(time, ['минуту', 'минуты', 'минут']);
-
-    scheduleReminder(minutes, () => {
-      bot.sendMessage(chatId, `Напоминаю: ${task}`);
-    });
-
-    bot.sendMessage(chatId, `Окей! Напомню через ${time} ${unitWord}.`);
-  }
+  bot.sendMessage(chatId, `Окей! Напомню через ${time} ${unitWord}.`);
 });
-
